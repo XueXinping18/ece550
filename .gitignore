@@ -1,0 +1,9 @@
+*.qsf
+*.bak
+*.zip
+*.rpt
+*_tb.v
+**/db/
+**/incremental_db/
+**/output_files/
+**simulation/
