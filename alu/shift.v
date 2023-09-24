@@ -32,7 +32,7 @@ endmodule
 // The shift function that use ports to control shift amount and parameter to control direction 
 module generic_shift (data, padding, ctrl_shiftamt, result);
 	// a parameter decide the direction of shift
-	parameter DIRECTION;
+	parameter DIRECTION = 1;
 	//number of bits in ctrl_shiftamt
 	localparam N = 5;
 	localparam SIZE = 2 ** N;
@@ -63,7 +63,7 @@ endmodule
 // positive SHIFT_INT represents shift right, and negative represents shift left;
 // padding represents what to pads: O or 1
 module one_time_shift(data, padding, result);
-	parameter SHIFT_INT;
+	parameter SHIFT_INT = 0;
 	
 	localparam SIZE = 32;
 	input[SIZE - 1:0] data;
