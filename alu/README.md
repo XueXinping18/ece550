@@ -27,15 +27,17 @@ The bitwire_operation module is capable of doing bitwise-and and bitwise-or acco
 ```
 module shift (data_operand, ctrl_shiftamt, direction, data_result);
 ```
-Shift module shifts data_operand by ctrl_shiftamt length. When direction equal to 0, it performs arithmetic right shift. When direction equal to 1, it performs logical left shift. It is implemented by calculate both type of shifts and then mux them. The actual work is delegated to generic_shift module.
+Shift module shifts data_operand by ctrl_shiftamt length. When direction equal to 0, it performs arithmetic right shift. When direction equal to 1, it performs logical left shift. It is implemented by calculate both type of shifts and then mux them. The actual work is delegated to arithmetic_right_shift and logical_left_shift modules.
 ```
-module generic_shift (data, padding, ctrl_shiftamt, result)(parameter DIRECTION);
+module arithmetic_right_shift (data, ctrl_shiftamt, result);
+module logical_left_shift (data, ctrl_shiftamt, result);
 ```
-The generic shift module requires padding as input port and DIRECTION as parameter to perform shifts. padding is defined as the number filled in when shifting. e.g. SLL always has padding 0 and SRA has padding according to the highest bit before shift. When shifting left, DIRECTION is -1. When shifting Right, DIRECTION is 1. The number of bits in ctrl_shiftamt is the number of stages for the shift operation. For the stage i, every bit is updated as the mux between the 2^i left/right bit and the current bit, according to the ctrl_shiftamt[i]. The shift operation in every stage (corresponding to the shift by 2^i bits) is delegated by the module one_time_shift.  
+The above two modules perform the two types of shifts. padding is defined as the number filled in when shifting. e.g. SLL always has padding 0 and SRA has padding according to the highest bit before shift. The number of bits in ctrl_shiftamt is the number of stages for the shift operation. For the stage i, every bit is updated as the mux between the 2^i left/right bit and the current bit, according to the ctrl_shiftamt[i]. The shift operation in every stage (corresponding to the shift by 2^i bits) is delegated by the module one_time_left_shift and one_time_right_shift, respectively. 
 ```
-module one_time_shift(data, padding, result)(parameter SHIFT_INT);
+module one_time_right_shift(data, padding, result)(parameter SHIFT_INT);
+module one_time_left_shift(data, padding, result)(parameter SHIFT_INT);
 ```
-Shift the data to right by SHIFT_INT bits. (When SHIFT_INT is negative, the data will shift left). 
+Shift the data in left or right by SHIFT_INT bits, respectively. Padding is defined as the number filled in, as is explained in the explanation for SRA and SLL. 
 ```
 module not_equal_to_zero_32bits(not_zero, data);
 ```
