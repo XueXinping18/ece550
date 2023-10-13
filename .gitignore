@@ -9,7 +9,6 @@
 **/incremental_db/
 **/output_files/
 **simulation/
-checkpoint_README_histories/
 *.qpf
 *.pdf
 ~*/
