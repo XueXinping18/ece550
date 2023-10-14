@@ -91,5 +91,54 @@ module processor(
     input [31:0] data_readRegA, data_readRegB;
 
     /* YOUR CODE STARTS HERE */
+	 // record all meaningful sections in the opcode
+	 wire[4:0] opcode;
+	 assign opcode = q_imem[31:27];
+	 
+    wire[4:0] rd, rs, rt;
+	 assign rd = q_imem[26:22];
+	 assign rs = q_imem[21:17];
+	 assign rt = q_imem[16:12];
+	 
+	 wire[4:0] shamt, aluop;
+	 assign shamt = q_imem[11:7];
+	 assign aluop = q_imem[6:2];
+	 
+	 wire[16:0] immediate;
+	 assign immediate = q_imem[16:0];
+	 
+	 // decide all control bits
+	 wire use_rd_as_second_readReg;
+	 wire immediate_type;
+	 opcode_control u_opc(opcode, use_rd_as_second_readReg, immediate_type);
+	 
+	 // decide 5-bit control registers
+	 assign ctrl_wirteReg = rd;
+	 assign ctrl_readRegA = rs;
+	 assign ctrl_readRegB = use_rd_as_second_readReg ? rd : rt;
+	 
+	 // decide data to be written in dram
+	 assign data = data_readRegB;
+	 
+	 // decide data operand B of the ALU to be immediate or value of regB
+	 wire [31:0] data_operandB;
+	 wire [31:0] sx_immediate;
+	 extend_sign #(.N_PREV(17), .N_EXTENDED(32)) u_xs(immediate, sx_immediate);
+	 assign data_operandB = immediate_type ? immediate_type : data_readRegB;
 
+	 // alu module
+	 wire isNotEqual, isLessThan, overflow;
+	 wire [31:0] alu_output;
+	 alu u_alu(data_readRegA, data_operandB, aluop, shamt, 
+			alu_output, isNotEqual, isLessThan, overflow);
+			
+	 // decide the value of r register after ALU according to opcode, aluop and overflow
+	 /* To be filled*/
+	 
+	 // decide address for dmem
+	 
+	 // decide writability of dmem and reg
+	 
+	 // decide address for imem
+	 
 endmodule
