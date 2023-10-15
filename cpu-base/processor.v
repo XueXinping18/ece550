@@ -112,8 +112,7 @@ module processor(
 	 opcode_control u_opc(opcode, use_rd_as_second_readReg, immediate_type, 
 		  wren, ctrl_writeEnable, load_reg_from_memory);
 	 
-	 // decide 5-bit control registers
-	 assign ctrl_wirteReg = rd;
+	 // decide readRegs for register file
 	 assign ctrl_readRegA = rs;
 	 assign ctrl_readRegB = use_rd_as_second_readReg ? rd : rt;
 	 
@@ -127,18 +126,29 @@ module processor(
 	 assign data_operandB = immediate_type ? immediate_type : data_readRegB;
 
 	 // alu module
-	 wire isNotEqual, isLessThan, overflow;
+	 wire isNotEqual, isLessThan, potential_overflow;
 	 wire [31:0] alu_output;
 	 alu u_alu(data_readRegA, data_operandB, aluop, shamt, 
-			alu_output, isNotEqual, isLessThan, overflow);
-			
-	 // TODO: decide the value of r_status register after ALU according to opcode, aluop and overflow
+			alu_output, isNotEqual, isLessThan, potential_overflow);
+	 // decide if overflow truly happened
+	 wire true_overflow;
+	 wire [31:0] rstatus_value;
+	 overflow_decider u_od(overflow, opcode, aluop, true_overflow, rstatus_value)
 	 
+	 // according to overflow or not, decide which register to write
+	 assign ctrl_wirteReg = true_overflow ? 5'b11110: rd;
+	 // according to overflow or not, decide which value to written to register
+	 wire alu_final_output;
+	 assign alu_final_output = true_overflow ? rstatus_value : alu_output;
+	 
+	 // decide the value of r_status register after ALU according to opcode, aluop and overflow
+	 assign ctrl_wirteReg = rd;
+	 assign ctrl_wirteReg = rd;
 	 // decide address for dmem
 	 assign address_dmem = alu_output[11:0];
 	 
 	 // decide the data to be written into register
-	 assign data_writeReg = load_reg_from_memory ? q_dmem : alu_output;
+	 assign data_writeReg = load_reg_from_memory ? q_dmem : alu_final_output;
 	 
 	 // create the program counter
 	 wire [11:0] pc; // the input wire of programming counter
@@ -147,6 +157,6 @@ module processor(
 	 // determine the pc of next cycle
 	 wire ignored1, ignored2
 	 wire [11:0] incremented_address
-	 RCA #(.SIZE(12))u_incr(incremented_address, ignored1, ignored2, address_imem, {11{1'b0}, 1'b1}, 1'b0)
+	 RCA #(.SIZE(12)) u_incr(incremented_address, ignored1, ignored2, address_imem, {11{1'b0}, 1'b1}, 1'b0)
 	 assign pc = incremented_pc;
 endmodule
