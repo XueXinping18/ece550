@@ -108,9 +108,9 @@ module processor(
 	 assign immediate = q_imem[16:0];
 	 
 	 // decide all control bits
-	 wire use_rd_as_second_readReg;
-	 wire immediate_type;
-	 opcode_control u_opc(opcode, use_rd_as_second_readReg, immediate_type);
+	 wire use_rd_as_second_readReg, immediate_type, load_reg_from_memory;
+	 opcode_control u_opc(opcode, use_rd_as_second_readReg, immediate_type, 
+		  wren, ctrl_writeEnable, load_reg_from_memory);
 	 
 	 // decide 5-bit control registers
 	 assign ctrl_wirteReg = rd;
@@ -132,13 +132,21 @@ module processor(
 	 alu u_alu(data_readRegA, data_operandB, aluop, shamt, 
 			alu_output, isNotEqual, isLessThan, overflow);
 			
-	 // decide the value of r register after ALU according to opcode, aluop and overflow
-	 /* To be filled*/
+	 // TODO: decide the value of r_status register after ALU according to opcode, aluop and overflow
 	 
 	 // decide address for dmem
+	 assign address_dmem = alu_output[11:0];
 	 
-	 // decide writability of dmem and reg
+	 // decide the data to be written into register
+	 assign data_writeReg = load_reg_from_memory ? q_dmem : alu_output;
 	 
-	 // decide address for imem
+	 // create the program counter
+	 wire [11:0] pc; // the input wire of programming counter
+	 dffe_ref #(.N(12)) program_counter(address_imem, pc, clock, 1'b1, reset)
 	 
+	 // determine the pc of next cycle
+	 wire ignored1, ignored2
+	 wire [11:0] incremented_address
+	 RCA #(.SIZE(12))u_incr(incremented_address, ignored1, ignored2, address_imem, {11{1'b0}, 1'b1}, 1'b0)
+	 assign pc = incremented_pc;
 endmodule
