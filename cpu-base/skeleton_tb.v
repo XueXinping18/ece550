@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 `define CLK_PERIOD 20
-module basic_tb;
+module skeleton_tb;
 reg clock, reset;
 wire imem_clock, dmem_clock, processor_clock, regfile_clock;
 // dut stands for 'design under test'
