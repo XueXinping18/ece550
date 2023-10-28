@@ -141,9 +141,15 @@ module processor(
 	 wire alu_final_output;
 	 assign alu_final_output = true_overflow ? rstatus_value : alu_output;
 	 
+	 
+	 // TODO: Do we still have to set the register when overflowing?
+	 // HOW TO SET BOTH REGISTERS at the same time?
+	 // Current implementation only set rstatus register when overflowing happened.
+	 
+	 
 	 // decide the value of r_status register after ALU according to opcode, aluop and overflow
-	 assign ctrl_wirteReg = rd;
-	 assign ctrl_wirteReg = rd;
+//	 assign ctrl_wirteReg = rd;
+//	 assign ctrl_wirteReg = rd;
 	 // decide address for dmem
 	 assign address_dmem = alu_output[11:0];
 	 
