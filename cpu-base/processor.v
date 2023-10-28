@@ -126,36 +126,28 @@ module processor(
 	 assign data_operandB = immediate_type ? immediate_type : data_readRegB;
 
 	 // alu module
-	 wire isNotEqual, isLessThan, potential_overflow;
+	 wire isNotEqual, isLessThan, alu_overflow;
 	 wire [31:0] alu_output;
 	 alu u_alu(data_readRegA, data_operandB, aluop, shamt, 
-			alu_output, isNotEqual, isLessThan, potential_overflow);
-	 // decide if overflow truly happened
-	 wire true_overflow;
+			alu_output, isNotEqual, isLessThan, alu_overflow);
+	 // decide the value of data_writeReg when regfile is not handling exception
+	 assign ctrl_writeReg_non_exception = rd;
+	 assign data_writeReg_non_exception = load_reg_from_memory ? q_dmem : alu_output;
+	 
+	 // The Bypass logic for rstatus_value
+	 // decide if we are handling exception in the current cycle
+	 wire exception_overflow;
 	 wire [31:0] rstatus_value;
-	 overflow_decider u_od(overflow, opcode, aluop, true_overflow, rstatus_value)
-	 
+	 overflow_decider u_od(alu_overflow, opcode, aluop, exception_overflow, rstatus_value)
 	 // according to overflow or not, decide which register to write
-	 assign ctrl_wirteReg = true_overflow ? 5'b11110: rd;
 	 // according to overflow or not, decide which value to written to register
-	 wire alu_final_output;
-	 assign alu_final_output = true_overflow ? rstatus_value : alu_output;
-	 
-	 
-	 // TODO: Do we still have to set the register when overflowing?
-	 // HOW TO SET BOTH REGISTERS at the same time?
-	 // Current implementation only set rstatus register when overflowing happened.
-	 
-	 
-	 // decide the value of r_status register after ALU according to opcode, aluop and overflow
-//	 assign ctrl_wirteReg = rd;
-//	 assign ctrl_wirteReg = rd;
+	 // ctrl_writeEnable doesn't change
+	 assign ctrl_writeReg = exception_overflow ? 5'b11110 : ctrl_writeReg_non_exception;
+	 assign data_writeReg = exception_overflow ? rstatus_value : data_writeReg_non_exception;
+
 	 // decide address for dmem
 	 assign address_dmem = alu_output[11:0];
-	 
-	 // decide the data to be written into register
-	 assign data_writeReg = load_reg_from_memory ? q_dmem : alu_final_output;
-	 
+	 /* The logic for program counter*/
 	 // create the program counter
 	 wire [11:0] pc; // the input wire of programming counter
 	 dffe_ref #(.N(12)) program_counter(address_imem, pc, clock, 1'b1, reset)
