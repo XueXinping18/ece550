@@ -131,6 +131,8 @@ module processor(
 	 alu u_alu(data_readRegA, data_operandB, aluop, shamt,
 			alu_output, isNotEqual, isLessThan, alu_overflow);
 	 // decide the value of data_writeReg when regfile is not handling exception
+	 wire [4:0] ctrl_writeReg_non_exception;
+	 wire [31:0] data_writeReg_non_exception;
 	 assign ctrl_writeReg_non_exception = rd;
 	 assign data_writeReg_non_exception = load_reg_from_memory ? q_dmem : alu_output;
 
@@ -150,11 +152,11 @@ module processor(
 	 /* The logic for program counter*/
 	 // create the program counter
 	 wire [11:0] pc; // the input wire of programming counter
-	 dffe_ref #(.N(12)) program_counter(address_imem, pc, clock, 1'b1, reset)
+	 dffe_ref #(.N(12)) program_counter(address_imem, pc, clock, 1'b1, reset);
 
 	 // determine the pc of next cycle
-	 wire ignored1, ignored2
-	 wire [11:0] incremented_address
-	 RCA #(.SIZE(12)) u_incr(incremented_address, ignored1, ignored2, address_imem, {11{1'b0}, 1'b1}, 1'b0)
+	 wire ignored1, ignored2;
+	 wire [11:0] incremented_pc;
+	 RCA #(.SIZE(12)) u_incr(incremented_pc, ignored1, ignored2, address_imem, {{11{1'b0}}, 1'b1}, 1'b0);
 	 assign pc = incremented_pc;
 endmodule
