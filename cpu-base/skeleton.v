@@ -39,7 +39,7 @@ module skeleton(clock, reset, imem_clock, dmem_clock, processor_clock, regfile_c
     wire [31:0] data;
     wire wren;
     wire [31:0] q_dmem;
-    clock_divider dmem(clock, reset, dmem_clock);
+    assign dmem_clock = clock;
     dmem my_dmem(
         .address    (address_dmem),       // address of data
         .clock      (dmem_clock),                  // may need to invert the clock
