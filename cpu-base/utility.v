@@ -36,14 +36,15 @@ endmodule
 module clock_generator(imem_clock, dmem_clock, processor_clock, regfile_clock, clock, reset);
 	input clock, reset;
 	output imem_clock, dmem_clock, processor_clock, regfile_clock;
-	// faster dmem and regfile
-	assign dmem_clock = clock;
+	// faster processor and regfile
 	assign regfile_clock = clock;
-	// slower imem and processor
-	assign imem_clock = clock;
-//	assign processor_clock = clock;
-//	clock_divider imem(clock, imem_clock);
-	clock_divider processor(clock, processor_clock);
+	assign processor_clock = clock;
+	// slower dmem
+	clock_divider dmem(clock, dmem_clock);
+	// much slower imem
+	wire middle_clock;
+	clock_divider middle(clock, middle_clock);
+	clock_divider imem(middle_clock, imem_clock);
 endmodule
 
 
