@@ -32,4 +32,13 @@ module dffe_ref(q, d, clk, en, clr);
        end
    end
 endmodule
-
+// use to divide a clock to double the period
+module clock_divider(clk, out_clk);
+output reg out_clk;
+input clk;
+initial out_clk = 1'b0;
+always @(posedge clk)
+begin
+     out_clk <= ~out_clk;	
+end
+endmodule

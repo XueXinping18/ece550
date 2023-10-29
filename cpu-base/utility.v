@@ -32,16 +32,18 @@ module overflow_decider(overflow, opcode, aluop, true_overflow, rstatus_value);
 	 assign rstatus_value[1] = (is_add_or_sub & aluop[0]) | is_addi;
 endmodule
 
-// Divide the clock frequency by 2 which will double the period.
-module clock_divider (clock, reset, out_clock);
-output reg out_clock;
-input clock ;
-input reset;
-always @(posedge clock)
-begin
-if (~reset)
-     out_clock <= 1'b0;
-else
-     out_clock <= ~out_clock;
-end
+// Abstract out all the clock generator
+module clock_generator(imem_clock, dmem_clock, processor_clock, regfile_clock, clock, reset);
+	input clock, reset;
+	output imem_clock, dmem_clock, processor_clock, regfile_clock;
+	// faster dmem and regfile
+	assign dmem_clock = clock;
+	assign regfile_clock = clock;
+	// slower imem and processor
+	assign imem_clock = clock;
+//	assign processor_clock = clock;
+//	clock_divider imem(clock, imem_clock);
+	clock_divider processor(clock, processor_clock);
 endmodule
+
+
