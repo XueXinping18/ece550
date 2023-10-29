@@ -15,7 +15,7 @@ module extend_sign(immediate, sx_immediate);
 endmodule
 
 // decide overflow happened or not according to the overflow signal of alu, and operation type.
-// Provide the value to be written in rstatus register if overflow occurred according to operation type.
+// Provide the the value to be written in rstatus register if overflow occurred according to operation type.
 module overflow_decider(overflow, opcode, aluop, true_overflow, rstatus_value);
 	 input overflow;
 	 input[4:0] opcode, aluop;
@@ -36,15 +36,17 @@ endmodule
 module clock_generator(imem_clock, dmem_clock, processor_clock, regfile_clock, clock, reset);
 	input clock, reset;
 	output imem_clock, dmem_clock, processor_clock, regfile_clock;
-	// faster processor and regfile
+	// faster imem and regfile
 	assign regfile_clock = clock;
-	assign processor_clock = clock;
+	assign imem_clock = clock;
 	// slower dmem
-	clock_divider dmem(clock, dmem_clock);
-	// much slower imem
+	wire reverse_dmem_clock;
+	clock_divider reverse_dmem(clock, reverse_dmem_clock);
+	assign dmem_clock = ~reverse_dmem_clock;
+	// much slower processor
 	wire middle_clock;
 	clock_divider middle(clock, middle_clock);
-	clock_divider imem(middle_clock, imem_clock);
+	clock_divider processor(middle_clock, processor_clock);
 endmodule
 
 
