@@ -15,7 +15,7 @@ module opcode_control(opcode, second_readReg, use_immediate,
 	assign dmem_writeEnable = opcode[0] & opcode[1] & opcode[2];
 
 	// decide whether register is writable
-	assign reg_writeEnable = opcode[1] & ~(opcode[0] ^ opcode[2]);
+	assign reg_writeEnable = ~opcode[1]; // TODO: should change in next checkpoint
 
 	// decide if the register will be loaded from memory
 	assign load_reg_from_memory = opcode[3];
