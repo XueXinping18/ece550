@@ -102,7 +102,9 @@ module processor(
 
 	 wire[4:0] shamt, aluop;
 	 assign shamt = q_imem[11:7];
-	 assign aluop = q_imem[6:2];
+	 wire is_Itype;
+	 assign is_Itype = opcode[0] | opcode[1] | opcode[2] | opcode[3] | opcode[4];
+	 assign aluop = is_Itype ? 5'b00000 : q_imem[6:2];
 
 	 wire[16:0] immediate;
 	 assign immediate = q_imem[16:0];
@@ -123,7 +125,7 @@ module processor(
 	 wire [31:0] data_operandB;
 	 wire [31:0] sx_immediate;
 	 extend_sign #(.N_PREV(17), .N_EXTENDED(32)) u_xs(immediate, sx_immediate);
-	 assign data_operandB = immediate_type ? immediate_type : data_readRegB;
+	 assign data_operandB = immediate_type ? immediate : data_readRegB;
 
 	 // alu module
 	 wire isNotEqual, isLessThan, alu_overflow;
