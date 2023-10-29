@@ -15,7 +15,7 @@ module extend_sign(immediate, sx_immediate);
 endmodule
 
 // decide overflow happened or not according to the overflow signal of alu, and operation type.
-// Provide the the value to be written in rstatus register if overflow occurred according to operation type.
+// Provide the value to be written in rstatus register if overflow occurred according to operation type.
 module overflow_decider(overflow, opcode, aluop, true_overflow, rstatus_value);
 	 input overflow;
 	 input[4:0] opcode, aluop;
