@@ -125,7 +125,7 @@ module processor(
 	 wire [31:0] data_operandB;
 	 wire [31:0] sx_immediate;
 	 extend_sign #(.N_PREV(17), .N_EXTENDED(32)) u_xs(immediate, sx_immediate);
-	 assign data_operandB = immediate_type ? immediate : data_readRegB;
+	 assign data_operandB = immediate_type ? sx_immediate : data_readRegB;
 
 	 // alu module
 	 wire isNotEqual, isLessThan, alu_overflow;
