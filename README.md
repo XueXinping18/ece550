@@ -18,4 +18,6 @@ The <b>clock_generator</b> fucntion generates the clock for Instruction Memory, 
 > This file convert the 32-bit instruction to 5-bit operation code, destination register, source register, memory address and PC address according to different types of instructions. Then read or write data from or to the registers or memory.
 
 ### Clock
->Instruction Memory and Register File's clock freqeuncy is four times of the clock frequency of Processor so that the longest path within the datapath can be finished within a clock cycle of the processor and the instruction is updated right after the update of PC. To avoid dirty write to the memory, Data Memory's clock frequency is double of the clock frequency of the processor, with the value being reversed.
+>Clock cycle of Imem is 4 times of the processor so that the update in PC can be reflected to update in instruction within 1/4 cycle.
+Clock cycle of Register file is 4 times of the processor so that the longest data path, i.e., lw can finish two register operation and one memory operation within one clock cycle of processor.
+Clock cycle of dmem is double the processor and reversed to avoid dirty write.
