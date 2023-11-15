@@ -4,11 +4,11 @@ module dffe_ref(q, d, clk, en, clr);
 	parameter N = 32;
    //Inputs
    input clk, clr, en;
-   input[N - 1: 0] d; 
-	
+   input[N - 1: 0] d;
+
 	//Output
    output[N - 1: 0] q;
-	
+
    //Internal wire
    wire clr;
 
@@ -33,3 +33,13 @@ module dffe_ref(q, d, clk, en, clr);
    end
 endmodule
 
+// use to divide a clock to double the period
+module clock_divider(clk, out_clk);
+output reg out_clk;
+input clk;
+initial out_clk = 1'b0;
+always @(posedge clk)
+begin
+     out_clk <= ~out_clk;
+end
+endmodule

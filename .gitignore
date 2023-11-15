@@ -3,7 +3,6 @@
 *.zip
 *.rpt
 *.qws
-*_tb.v
 *.qps
 **/db/
 **/incremental_db/
