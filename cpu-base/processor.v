@@ -100,23 +100,26 @@ module processor(
 	 assign rs = q_imem[21:17];
 	 assign rt = q_imem[16:12];
 
-	 wire[4:0] shamt, aluop;
+	 wire[4:0] shamt, raw_aluop;
 	 assign shamt = q_imem[11:7];
-	 wire is_Itype;
-	 assign is_Itype = opcode[0] | opcode[1] | opcode[2] | opcode[3] | opcode[4];
-	 assign aluop = is_Itype ? 5'b00000 : q_imem[6:2];
+	 assign raw_aluop = q_imem[6:2];
 
 	 wire[16:0] immediate;
 	 assign immediate = q_imem[16:0];
-
+	 
+	 wire[26:0] target;
+	 assign target = q_imem[26:0];
+	 
 	 // decide all control bits
 	 wire use_rd_as_second_readReg, immediate_type, load_reg_from_memory;
+	 wire is_bne, is_blt, is_j, is_jal, is_jr, is_bex, is_setx;
 	 opcode_control u_opc(opcode, use_rd_as_second_readReg, immediate_type,
-		  wren, ctrl_writeEnable, load_reg_from_memory);
-
+		  wren, ctrl_writeEnable, load_reg_from_memory, is_bne, is_blt, 
+		  is_j, is_jal, is_jr, is_bex, is_setx);
+	 
 	 // decide readRegs for register file
-	 assign ctrl_readRegA = rs;
-	 assign ctrl_readRegB = use_rd_as_second_readReg ? rd : rt;
+	 assign ctrl_readRegA = is_bex ? 5'b11110: rs;
+	 assign ctrl_readRegB = is_bex ? 5'b00000: (use_rd_as_second_readReg ? rd : rt);
 
 	 // decide data to be written in dram
 	 assign data = data_readRegB;
@@ -126,39 +129,67 @@ module processor(
 	 wire [31:0] sx_immediate;
 	 extend_sign #(.N_PREV(17), .N_EXTENDED(32)) u_xs(immediate, sx_immediate);
 	 assign data_operandB = immediate_type ? sx_immediate : data_readRegB;
-
+	 
+	 // Decide which alu operation will be used
+	 wire [4:0] alu_operation_type;
+	 decide_alu_operation decider_ao(opcode, raw_aluop, alu_operation_type);
+	 
 	 // alu module
 	 wire isNotEqual, isLessThan, alu_overflow;
 	 wire [31:0] alu_output;
-	 alu u_alu(data_readRegA, data_operandB, aluop, shamt,
+	 alu u_alu(data_readRegA, data_operandB, alu_operation_type, shamt,
 			alu_output, isNotEqual, isLessThan, alu_overflow);
-	 // decide the value of data_writeReg when regfile is not handling exception
+	 // decide the value of data_writeReg when regfile is not handling exception and not Jtype
 	 wire [4:0] ctrl_writeReg_non_exception;
 	 wire [31:0] data_writeReg_non_exception;
 	 assign ctrl_writeReg_non_exception = rd;
 	 assign data_writeReg_non_exception = load_reg_from_memory ? q_dmem : alu_output;
-
+	
 	 // The Bypass logic for rstatus_value
 	 // decide if we are handling exception in the current cycle
 	 wire exception_overflow;
-	 wire [31:0] rstatus_value;
-	 overflow_decider u_od(alu_overflow, opcode, aluop, exception_overflow, rstatus_value);
-	 // according to overflow or not, decide which register to write
-	 // according to overflow or not, decide which value to written to register
-	 // ctrl_writeEnable doesn't change
-	 assign ctrl_writeReg = exception_overflow ? 5'b11110 : ctrl_writeReg_non_exception;
-	 assign data_writeReg = exception_overflow ? rstatus_value : data_writeReg_non_exception;
-
+	 wire [31:0] rstatus_value_overflow;
+	 overflow_decider u_od(alu_overflow, opcode, alu_operation_type, exception_overflow, rstatus_value_overflow);
+	 // according to overflow or not, decide which register to write what data
+	 wire [4:0] ctrl_writeReg_not_Jtype;
+	 wire [31:0] data_writeReg_not_Jtype;
+	 assign ctrl_writeReg_not_Jtype = exception_overflow ? 5'b11110 : ctrl_writeReg_non_exception;
+	 assign data_writeReg_not_Jtype = exception_overflow ? rstatus_value_overflow : data_writeReg_non_exception;
+	
+	 // decide the what data is written into which register for J type 
+	 assign ctrl_writeReg = is_jal ? 5'b11111 : (is_setx ? 5'b11110 : ctrl_writeReg_not_Jtype);
+	 assign data_writeReg = is_jal ? {{20{1'b0}}, incremented_pc} : (is_setx ? {{5{1'b0}}, target} : data_writeReg_not_Jtype);
+	 /* TODO : Handling the Dirty write of registers */
+	 
 	 // decide address for dmem
 	 assign address_dmem = alu_output[11:0];
 	 /* The logic for program counter*/
 	 // create the program counter
-	 wire [11:0] pc; // the input wire of programming counter
-	 dffe_ref #(.N(12)) program_counter(address_imem, pc, clock, 1'b1, reset);
+	 wire [11:0] input_pc; // the input wire of programming counter
+	 dffe_ref #(.N(12)) program_counter(address_imem, input_pc, clock, 1'b1, reset);
 
 	 // determine the pc of next cycle
-	 wire ignored1, ignored2;
+	 wire ignored1, ignored2, ignore3, ignore4;
 	 wire [11:0] incremented_pc;
+	 // increment pc: address_imem is the output of pc, input of the adder
 	 RCA #(.SIZE(12)) u_incr(incremented_pc, ignored1, ignored2, address_imem, {{11{1'b0}}, 1'b1}, 1'b0);
-	 assign pc = incremented_pc;
+	 // add immediate on it
+	 /* TODO: whether immediate can be negative? contatenation of immediate is used assuming no negative */
+	 wire [11:0] immediate_pc;
+	 RCA #(.SIZE(12)) u_incr_immed(immediate_pc, ignore3, ignore4, incremented_pc, immediate[11:0], 1'b0);
+	 // mux to decide whether to add immediate after increment
+	 wire should_pc_jump_by_N;
+	 assign should_pc_jump_by_N = (is_bne & isNotEqual) | (is_blt & ~isLessThan & isNotEqual);
+	 wire[11:0] imme_or_incr_pc;
+	 assign imme_or_incr_pc = should_pc_jump_by_N ? immediate_pc : incremented_pc;
+	 // mux to decide whether to jump to target
+	 wire should_jump_to_target;
+	 assign should_jump_to_target = is_j | is_jal | (is_bex & isNotEqual);
+	 wire[11:0] target_or_imme_or_incr_pc;
+	 assign target_or_imme_or_incr_pc = should_jump_to_target ? target[11:0] : imme_or_incr_pc;
+	 // mux to decide whether to jump to rd register value
+	 wire should_jump_to_rd;
+	 assign should_jump_to_rd = is_jr;
+	 assign input_pc = should_jump_to_rd ? data_readRegB[11:0] : target_or_imme_or_incr_pc;
+	 
 endmodule
