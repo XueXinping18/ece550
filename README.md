@@ -1,4 +1,4 @@
-# Checkpoint4
+# Checkpoint5
 ## name: Xinping Xue, Haolou Sun
 ## netID: xx99, hs392
 
@@ -6,7 +6,7 @@
 > There are four units in the processor with each having its own clock: Instruction Memory, Register File, and Data Memory and programming counter. The processor will read a 32-bits instruction from the Instruction Memory and converts it into operation code, input address and output address. Then, using the operation code, input and output address, the processor will handle the intruction, writing the appropriate values into Register File, Data Memory and programming counter accordingly.
 
 ### opcode_control.v
-> This file contains modules that abstract out the logic to convert operation code and into a variety of specific signals that are used as inputs of muxes, enable bits in DFFEs or memories, and other useful signals. Also, the type of operation in ALU is also decided according to the opcode and aluop bits in the instruction. 
+> This file contains modules that abstract out the logic to convert operation code and into a variety of specific signals that are used as inputs of muxes, enable bits in DFFEs or memories, and other useful signals. Also, the type of operation in ALU is also decided according to the opcode and aluop bits in the instruction.
 
 ### utility.v
 > This file contains three helper function that will be used in <b> processor.v </b>file:
