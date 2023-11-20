@@ -34,7 +34,7 @@ endmodule
 
 // Abstract out all the clock generator
 module clock_generator(imem_clock, dmem_clock, processor_clock, regfile_clock, clock, reset);
-	input original_clock, reset;
+	input clock, reset;
 	output imem_clock, dmem_clock, processor_clock, regfile_clock;
 
 	// faster processor and regfile
