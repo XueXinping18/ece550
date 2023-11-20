@@ -33,22 +33,19 @@ module overflow_decider(overflow, opcode, aluop, true_overflow, rstatus_value);
 endmodule
 
 // Abstract out all the clock generator
-module clock_generator(imem_clock, dmem_clock, processor_clock, regfile_clock, original_clock, reset);
+module clock_generator(imem_clock, dmem_clock, processor_clock, regfile_clock, clock, reset);
 	input original_clock, reset;
 	output imem_clock, dmem_clock, processor_clock, regfile_clock;
-	// To reserve enough time for fetching IMEM, make everything slower
-	clock_divider basic_clock(original_clock, clock);
-	// faster imem and regfile
-	assign imem_clock = clock;
-	// slower dmem
-	wire reverse_dmem_clock;
-	clock_divider reverse_dmem(clock, reverse_dmem_clock);
-	clock_divider regfile(clock, regfile_clock);
-	assign dmem_clock = ~reverse_dmem_clock;
-	// much slower processor
+
+	// faster processor and regfile
+	assign processor_clock = clock;
+	assign regfile_clock = clock;
+
+	// much slower imem
 	wire middle_clock;
 	clock_divider middle(clock, middle_clock);
-	clock_divider processor(middle_clock, processor_clock);
+	clock_divider i(middle_clock, imem_clock);
+	assign dmem_clock = ~imem_clock;
 endmodule
 
 
