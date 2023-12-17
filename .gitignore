@@ -4,6 +4,8 @@
 *.rpt
 *.qws
 *.qps
+*.qip
+*_bb.v
 **/db/
 **/incremental_db/
 **/output_files/
